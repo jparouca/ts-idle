@@ -5,6 +5,14 @@ type GameState = {
   damage: number;
   life: number;
   attackSpeed: number;
+  enemy: Enemy | null;
+}
+
+type Enemy = {
+  name: string;
+  damage: number;
+  life: number;
+  attackSpeed: number;
 }
 
 type ModalProps = {
@@ -21,32 +29,16 @@ function App() {
     attackSpeed: 0,
   });
   const [isModalOpen, setIsModalOpen] = useState(true);
-  const [gold, setGold] = useState(0);
-  const [dagger, setDagger] = useState(false);
-  const [rate, setRate] = useState(1);
 
   useEffect(() => {
     if (gameState.faction !== null) {
       const interval = setInterval(() => {
-        setGold(gold + 1);
       }, 1000);
     
       return () => clearInterval(interval);
     }
   }, [gameState.faction]);
 
-
-  function buyDagger() {
-    if (gold >= 10 && !dagger) {
-      setDagger(true);
-      setGold(gold - 10);
-      setRate(rate + 1);
-    }
-  }
-
-  function farm() {
-    setGold(gold * rate + 1);
-  }
 
   function selectFaction (faction: 'Demacia' | 'Noxus' | 'Piltover') {
   let newState: GameState;
@@ -82,7 +74,25 @@ function App() {
   setGameState(newState);
   setIsModalOpen(false);
 
-};
+  };
+  const PlayerStatsContainer: React.FC = () => {
+    return (
+      <div className='max-w-max rounded justify-center items-center border border-solid p-2'>
+        <header className='flex items-center flex-row'>
+          <h1 className='text-2xl text-gray-900 mr-2'>Takaxo</h1>
+          <h2 className='text-sm text-gray-900'>{gameState.faction}</h2>
+        </header>
+        <div className='pt-2 px-4'>
+          <ul className='text-sm'>
+            <li>Damage: {gameState.damage}</li>
+            <li>Life: {gameState.life}</li>
+            <li>Attack Speed: {gameState.attackSpeed}</li>
+          </ul>
+        </div>
+      </div>
+    )
+  }
+
 
   return (
     <>
@@ -91,17 +101,7 @@ function App() {
         onClose={() => setIsModalOpen(false)}
         selectFaction={selectFaction}
       />
-      <h1>Gold: {gold} </h1>
-      <button
-        className='p-4'
-        onClick={
-          () => {farm()}
-        }>
-        Farm
-      </button>
-      <h2> Faction:{gameState.faction} </h2>
-
-      <button onClick={() => {buyDagger()}}> buy dagger</button>
+      <PlayerStatsContainer />
     </>
   )
 }
@@ -114,7 +114,7 @@ const Modal: React.FC<ModalProps> = ({isOpen, onClose, selectFaction}) => {
 
   return (
     <div className="fixed z-10 inset-0 flex items-center justify-center">
-      <div className="bg-white rounded-lg text-left overflow-hidden shadow-xl sm:max-w-lg sm:w-full">
+      <div className="bg-white rounded text-center overflow-hidden shadow-xl sm:max-w-lg sm:w-full">
         <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
           <h3 className="text-lg leading-6 font-medium text-gray-900">Choose your faction</h3>
           <div className="mt-2">
@@ -138,3 +138,4 @@ const Modal: React.FC<ModalProps> = ({isOpen, onClose, selectFaction}) => {
     </div>
   )
 }
+
