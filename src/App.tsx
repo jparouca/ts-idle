@@ -1,25 +1,5 @@
 import {useState, useEffect} from 'react'
-
-type GameState = {
-  faction: 'Demacia' | 'Noxus' | 'Piltover' | null;
-  damage: number;
-  life: number;
-  attackSpeed: number;
-  enemy: Enemy | null;
-}
-
-type Enemy = {
-  name: string;
-  damage: number;
-  life: number;
-  attackSpeed: number;
-}
-
-type ModalProps = {
-  isOpen: boolean;
-  onClose: () => void;
-  selectFaction: (faction: 'Demacia' | 'Noxus' | 'Piltover') => void;
-};
+import './types'
 
 function App() {
   const [gameState, setGameState] = useState<GameState>({
@@ -27,54 +7,66 @@ function App() {
     damage: 0,
     life: 0,
     attackSpeed: 0,
+    enemy: null,
   });
+
+  function generateEnemy() {
+    return {
+    name: 'Red Minion',
+    damage: 5,
+    life: 50,
+    attackSpeed: 0.7,
+    };
+  };
   const [isModalOpen, setIsModalOpen] = useState(true);
 
   useEffect(() => {
     if (gameState.faction !== null) {
       const interval = setInterval(() => {
-      }, 1000);
+        combat();
+      }, 1000 / gameState.attackSpeed);
     
       return () => clearInterval(interval);
     }
-  }, [gameState.faction]);
+  }, [gameState.faction, gameState.attackSpeed]);
 
 
   function selectFaction (faction: 'Demacia' | 'Noxus' | 'Piltover') {
-  let newState: GameState;
+    let newState: GameState;
 
-  switch (faction) {
-    case 'Demacia':
-      newState = {
-        faction: 'Demacia',
-        damage: 14,
-        life: 140,
-        attackSpeed: 1.2,
-      };
-      break;
-    case 'Noxus':
-      newState = {
-        faction: 'Noxus',
-        damage: 18,
-        life: 120,
-        attackSpeed: 1.2,
-      };
-      break;
-    case 'Piltover':
-      newState = {
-        faction: 'Piltover',
-        damage: 12,
-        life: 160,
-        attackSpeed: 1.2,
-      };
-      break;
-    default:
-      return;
-  }
-  setGameState(newState);
-  setIsModalOpen(false);
+    switch (faction) {
+      case 'Demacia':
+        newState = {
+          faction: 'Demacia',
+          damage: 14,
+          life: 140,
+          attackSpeed: 1.2,
+        };
+        break;
+      case 'Noxus':
+        newState = {
+          faction: 'Noxus',
+          damage: 18,
+          life: 120,
+          attackSpeed: 1.2,
+        };
+        break;
+      case 'Piltover':
+        newState = {
+          faction: 'Piltover',
+          damage: 12,
+          life: 160,
+          attackSpeed: 1.2,
+        };
+        break;
+      default:
+        return;
+    }
+    setGameState({...newState, enemy: generateEnemy()});
+    setIsModalOpen(false);
 
   };
+
   const PlayerStatsContainer: React.FC = () => {
     return (
       <div className='max-w-max rounded justify-center items-center border border-solid p-2'>
@@ -93,6 +85,51 @@ function App() {
     )
   }
 
+  function combat() {
+    if (gameState.enemy) {
+      const newEnemyLife = gameState.enemy.life - gameState.damage;
+
+    if (newEnemyLife <= 0) {
+      setGameState({
+        ...gameState,
+        enemy: null,
+      });
+    } else {
+      setGameState({
+        ...gameState,
+        enemy: {
+          ...gameState.enemy,
+          life: newEnemyLife,
+        },
+      });
+    }
+  }
+}
+
+  const MinionStatsContainer: React.FC = () => {
+    if (!gameState.enemy) {
+      return <h1 className='text-2xl text-green-600'>last hit</h1>;
+    }
+
+    return (
+      <div className='max-w-max rounded justify-center items-center border border-solid p-2'>
+        <header className='flex items-center flex-row'>
+          <h1 className='text-2xl text-gray-900 mr-2'>{gameState.enemy.name}</h1>
+        </header>
+        <div className='pt-2 px-4'>
+          <ul className='text-sm'>
+            <li>Damage: {gameState.enemy.damage}</li>
+            <li>Life: {gameState.enemy.life}</li>
+            <li>Attack Speed: {gameState.enemy.attackSpeed}</li>
+          </ul>
+        </div>
+        <button className='rounded px-2 py-1'> attack </button>
+      </div>
+    )
+  }
+
+
+
 
   return (
     <>
@@ -102,6 +139,7 @@ function App() {
         selectFaction={selectFaction}
       />
       <PlayerStatsContainer />
+      <MinionStatsContainer />
     </>
   )
 }
@@ -138,4 +176,5 @@ const Modal: React.FC<ModalProps> = ({isOpen, onClose, selectFaction}) => {
     </div>
   )
 }
+
 
