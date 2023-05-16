@@ -1,20 +1,23 @@
-type GameState = {
-  faction: 'Demacia' | 'Noxus' | 'Piltover' | null;
+type Champion = {
+  id: string;
+  name: string;
+  health: number;
   damage: number;
-  life: number;
   attackSpeed: number;
-  enemy?: Enemy | null;
-}
+};
 
 type Enemy = {
+  id: string;
   name: string;
+  health: number;
   damage: number;
-  life: number;
   attackSpeed: number;
-}
-
-type ModalProps = {
-  isOpen: boolean;
-  onClose: () => void;
-  selectFaction: (faction: 'Demacia' | 'Noxus' | 'Piltover') => void;
 };
+
+type GameState = {
+  champion: Champion;
+  currentEnemy: Enemy;
+  inBattle: boolean;
+};
+
+export type { Champion, Enemy, GameState }
