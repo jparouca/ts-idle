@@ -10,7 +10,6 @@ const ChampionStatsContainer: React.FC<ChampionStatsProps> = ({ champion }) => {
     <div className='max-w-max rounded justify-center items-center border border-solid p-2'>
       <header className='flex items-center flex-row'>
         <h1 className='text-2xl text-gray-900 mr-2'>Takaxo</h1>
-        <h2 className='text-sm text-gray-900'>{champion.name}</h2>
       </header>
       <HealthBar 
         current={champion.health}  
