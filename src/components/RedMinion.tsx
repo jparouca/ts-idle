@@ -14,7 +14,7 @@ const RedMinion: React.FC<RedMinionProps> = ({enemy}) => {
       <h2> Red Minion </h2>
       <HealthBar
         current={enemy.health}
-        max={250}
+        max={50}
         />
       <div>
         <span>Health: {enemy.health}</span>

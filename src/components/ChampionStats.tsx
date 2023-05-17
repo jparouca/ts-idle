@@ -13,7 +13,7 @@ const ChampionStatsContainer: React.FC<ChampionStatsProps> = ({ champion }) => {
       </header>
       <HealthBar 
         current={champion.health}  
-        max={1200}
+        max={100}
       />
       <div className='pt-2 px-4'>
         <ul className='text-sm'>

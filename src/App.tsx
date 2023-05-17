@@ -13,16 +13,16 @@ const App: React.FC<GameProps> = ({gameState}) => {
     champion: {
       id: '1',
       name: 'Takaxo',
-      damage: 63,
-      attackSpeed: 1,
-      health: 550,
+      damage: 12,
+      health: 100,
+      attackSpeed: 0.5,
     },
     currentEnemy: {
       id: '2',
       name: 'Red Minion',
       damage: 8,
-      health: 250,
-      attackSpeed: 0.314
+      health: 50,
+      attackSpeed: 0.4
     },
     inBattle: false,
   };
@@ -31,19 +31,37 @@ const App: React.FC<GameProps> = ({gameState}) => {
   const [inBattle, setInBattle] = useState<boolean>(gameState?.inBattle || initialGameState.inBattle);
 
   useEffect(() => {
-    let interval: ReturnType<typeof setInterval>;
+    let championInterval: ReturnType<typeof setInterval>;
+    let enemyInterval: ReturnType<typeof setInterval>;
+
     if (inBattle) {
-      interval = setInterval(() => {
-        if (enemy.health >= 0 && champion.health > 0) {
-          setEnemy(prev => ({...prev, health: prev.health - champion.damage}))
-          setChampion(prev => ({...prev, health: prev.health - enemy.damage}))
-        } else {
-          setInBattle(false);
-        }
+      championInterval = setInterval(() => {
+        setEnemy(prev => {
+          if (prev.health > 0) {
+            return {...prev, health: prev.health - champion.damage};
+          } else {
+            setInBattle(false);
+            return prev;
+          }
+        });
       }, 1000 / champion.attackSpeed);
+
+      enemyInterval = setInterval(() => {
+        setChampion(prev => {
+          if (prev.health > 0) {
+            return {...prev, health: prev.health - enemy.damage};
+          } else {
+            setInBattle(false);
+            return prev;
+          }
+        });
+      }, 1000 / enemy.attackSpeed);
     }
-    return () => clearInterval(interval);
-  }, [inBattle, enemy.health, champion]);
+    return () => {
+      clearInterval(championInterval);
+      clearInterval(enemyInterval);
+    };
+  }, [inBattle, champion.attackSpeed, enemy.attackSpeed]);
 
   return (
     <>
