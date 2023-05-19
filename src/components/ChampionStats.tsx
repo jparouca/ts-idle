@@ -1,4 +1,5 @@
 import {Champion} from '../types';
+import ProgressBar from './AttackProgressBar';
 import HealthBar from './HealthBar';
 
 interface ChampionStatsProps {

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import ChampionStatsContainer from "./components/ChampionStats";
 import RedMinion from "./components/RedMinion";
 import { Champion, GameState, Enemy } from "./types";
+import ProgressBar from "./components/AttackProgressBar";
 
 interface GameProps {
   gameState?: GameState;
@@ -29,12 +30,18 @@ const App: React.FC<GameProps> = ({gameState}) => {
   const [champion, setChampion] = useState<Champion>(gameState?.champion || initialGameState.champion);
   const [enemy, setEnemy] = useState<Enemy>(gameState?.currentEnemy || initialGameState.currentEnemy);
   const [inBattle, setInBattle] = useState<boolean>(gameState?.inBattle || initialGameState.inBattle);
+  const [championAttackProgress, setChampionAttackProgress] = useState<number>(0);
+  const [enemyAttackProgress, setEnemyAttackProgress] = useState<number>(0);
+
 
   useEffect(() => {
     let championInterval: ReturnType<typeof setInterval>;
     let enemyInterval: ReturnType<typeof setInterval>;
 
     if (inBattle) {
+      setChampionAttackProgress(0);
+      setEnemyAttackProgress(0);
+
       championInterval = setInterval(() => {
         setEnemy(prev => {
           if (prev.health > 0) {
@@ -44,6 +51,11 @@ const App: React.FC<GameProps> = ({gameState}) => {
             return prev;
           }
         });
+
+        setChampionAttackProgress(prev => prev + (100 / (1000 / champion.attackSpeed)));
+        if (championAttackProgress >= 100) {
+          setChampionAttackProgress(0);
+        }
       }, 1000 / champion.attackSpeed);
 
       enemyInterval = setInterval(() => {
@@ -60,12 +72,15 @@ const App: React.FC<GameProps> = ({gameState}) => {
     return () => {
       clearInterval(championInterval);
       clearInterval(enemyInterval);
+      setChampionAttackProgress(0);
     };
   }, [inBattle, champion.attackSpeed, enemy.attackSpeed]);
 
   return (
     <>
+      {console.log(championAttackProgress)};
       <ChampionStatsContainer champion={champion}/>
+      <ProgressBar progress={championAttackProgress} />
       <RedMinion enemy={enemy} />
       <button
         disabled={inBattle}
