@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef} from "react";
 import ChampionStatsContainer from "./components/ChampionStats";
 import RedMinion from "./components/RedMinion";
 import { Champion, GameState, Enemy } from "./types";
@@ -32,53 +32,75 @@ const App: React.FC<GameProps> = ({gameState}) => {
   const [inBattle, setInBattle] = useState<boolean>(gameState?.inBattle || initialGameState.inBattle);
   const [championAttackProgress, setChampionAttackProgress] = useState<number>(0);
   const [enemyAttackProgress, setEnemyAttackProgress] = useState<number>(0);
+  const championPrevTimestamp = useRef<number>(0);
+  const championAttackDuration = 1000 / champion.attackSpeed;
+  const enemyPrevTimestamp = useRef<number>(0);
+  const enemyAttackDuration = 1000 / enemy.attackSpeed;
 
+  const frame = (timestamp: number) => {
+    attack(timestamp);
+    requestAnimationFrame(frame);
+  }
 
   useEffect(() => {
-    let championInterval: ReturnType<typeof setInterval>;
-    let enemyInterval: ReturnType<typeof setInterval>;
+    requestAnimationFrame(frame);
+    return () => setChampionAttackProgress(0);
+  }, [inBattle, champion, enemy]);
 
-    if (inBattle) {
+  function attack(timestamp: number) {
+    if (!inBattle) {
+      championPrevTimestamp.current, enemyPrevTimestamp.current = 0;
       setChampionAttackProgress(0);
       setEnemyAttackProgress(0);
-
-      championInterval = setInterval(() => {
-        setEnemy(prev => {
-          if (prev.health > 0) {
-            return {...prev, health: prev.health - champion.damage};
-          } else {
-            setInBattle(false);
-            return prev;
-          }
-        });
-
-        setChampionAttackProgress(prev => prev + (100 / (1000 / champion.attackSpeed)));
-        if (championAttackProgress >= 100) {
-          setChampionAttackProgress(0);
-        }
-      }, 1000 / champion.attackSpeed);
-
-      enemyInterval = setInterval(() => {
-        setChampion(prev => {
-          if (prev.health > 0) {
-            return {...prev, health: prev.health - enemy.damage};
-          } else {
-            setInBattle(false);
-            return prev;
-          }
-        });
-      }, 1000 / enemy.attackSpeed);
+      return;
     }
-    return () => {
-      clearInterval(championInterval);
-      clearInterval(enemyInterval);
+
+    if (!championPrevTimestamp.current) championPrevTimestamp.current = timestamp;
+    if (!enemyPrevTimestamp.current) enemyPrevTimestamp.current = timestamp;
+
+    const championDelta = timestamp - championPrevTimestamp.current;
+    const enemyDelta = timestamp - enemyPrevTimestamp.current;
+
+    if (championDelta > championAttackDuration) {
+      championPrevTimestamp.current = timestamp;
+      setEnemy(prev => {
+        if (prev.health > champion.damage) {
+          return {...prev, health: prev.health - champion.damage}
+        } else {
+          setInBattle(false);
+          return {...prev, health: 0};
+        }
+      });
       setChampionAttackProgress(0);
-    };
-  }, [inBattle, champion.attackSpeed, enemy.attackSpeed]);
+      if (enemy.health - champion.damage <= 0) {
+        return;
+      }
+    } else {
+      setChampionAttackProgress((championDelta / championAttackDuration) * 100);
+    }
+
+    if (enemyDelta > enemyAttackDuration) {
+      enemyPrevTimestamp.current = timestamp;
+      setChampion(prev => {
+        if (prev.health > enemy.damage) {
+          return {...prev, health: prev.health - enemy.damage}
+        } else {
+          setInBattle(false);
+          return {...prev, health: 0};
+        }
+      });
+      setEnemyAttackProgress(0);
+      if (champion.health - enemy.damage <= 0) {
+        return;
+      }
+    } else {
+      setEnemyAttackProgress((enemyDelta / enemyAttackDuration) * 100);
+    }
+  }
+
 
   return (
     <>
-      {console.log(championAttackProgress)};
       <ChampionStatsContainer champion={champion}/>
       <ProgressBar progress={championAttackProgress} />
       <RedMinion enemy={enemy} />
@@ -94,3 +116,5 @@ const App: React.FC<GameProps> = ({gameState}) => {
 
 
 export default App;
+
+
